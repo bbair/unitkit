@@ -193,22 +193,4 @@ class hertz(BaseUnit):
         super().__init__(prefix = prefix, exp = exp)
 
 
-# class unitless(BaseUnit):
-    
-#     base = None
-#     dimension = "unitless"
-#     __name__ = "unitless"
-
-#     def __init__(self):
-#         super().__init__(exp = 1)
-
-#     def __str__(self):
-#         return "unitless"
-    
-#     def __mul__(self, other):
-#         if isinstance(other, unitless):
-#             return unitless()
-#         return other
-
-
 all_unit_types = [meter, kelvin, joule, pascal, gram, mol, newton, second, watt, coulomb, hertz]

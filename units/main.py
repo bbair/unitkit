@@ -27,25 +27,25 @@ class Units:
     
     def __mul__(self, other):
         new = Units()
-        if isinstance(other, BaseUnit) and not isinstance(other, Units):
-            raise Exception("Not expected to multiply against a BaseUnit")
-            # for u in self.base_units:
-            #     if u == other:
-            #         u = u * other
-            #     if not isinstance(u, unitless):
-            #         new.base_units.append(u)
-            # if other not in self.base_units:
-            #     new.base_units.append(other)        
+        if isinstance(other, BaseUnit):
+            for u in self.base_units:
+                if u == other:
+                    u = u * other
+                if u:
+                    new.base_units.append(u)
+            if other not in self.base_units:
+                new.base_units.append(other)      
 
-        for u in self.base_units:
-            if u in other.base_units:
-                same = [x for x in other.base_units if x == u][0]
-                u = u * same
-            if u:
-                new.base_units.append(u)
-        for u in other.base_units:
-            if not u in self.base_units:
-                new.base_units.append(u)
+        else:
+            for u in self.base_units:
+                if u in other.base_units:
+                    same = [x for x in other.base_units if x == u][0]
+                    u = u * same
+                if u:
+                    new.base_units.append(u)
+            for u in other.base_units:
+                if not u in self.base_units:
+                    new.base_units.append(u)
 
         return new
     
