@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "abates20.units"
+version = "0.1.0"
+authors = [
+  { name="Adam Bates", email="adambates923@gmail.com" },
+]
+description = "A Python package for dealing with units"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://github.com/abates20/pythonUnits"
+"Bug Tracker" = "https://github.com/abates20/pythonUnits/issues"
