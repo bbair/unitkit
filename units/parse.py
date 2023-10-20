@@ -1,4 +1,4 @@
-from .__baseUnits__ import BaseUnit, all_unit_types
+from .__baseUnits__ import BaseUnit, all_base_units, custom
 
 special_chars = ["/", "*", "(", ")", "^"]
 
@@ -39,7 +39,7 @@ def parse_units(tokens, in_numerator = True, group = False):
 
         elif token != "1":
             match = None
-            for u in all_unit_types:
+            for u in all_base_units:
                 match = BaseUnit.try_match(u, token)
                 if match:
                     break
@@ -72,3 +72,9 @@ def parse_exp(tokens: str):
         string += tokens[i]
         i += 1
     return eval(string), len(string)
+
+
+def add_base_unit(name, base, dimension, base_modifier):
+    global all_base_units
+    new_unit = custom(base, dimension, name, base_modifier)
+    all_base_units = [new_unit] + all_base_units

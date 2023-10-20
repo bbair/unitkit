@@ -1,14 +1,15 @@
 class BaseUnit:
 
     prefixes = ["n", "u", "m", "c", "d", "k", "M", ""]
-    modifiers = [1e9, 1e6, 1e3, 1e2, 1e1, 1e-3, 1e-6, 1]
+    prefix_modifiers = [1e9, 1e6, 1e3, 1e2, 1e1, 1e-3, 1e-6, 1]
     base = ""
     dimension = ""
+    base_modifier = 1
 
     def __init__(self, prefix = "", exp = 1.0):
         self.prefix = prefix
         self.exp = exp
-        self.modifier = self.modifiers[self.prefixes.index(prefix)]
+        self.prefix_modifier = self.prefix_modifiers[self.prefixes.index(prefix)]
 
     def __str__(self):
         return f"{self.prefix}{self.base}^{self.exp}" if self.exp != 1 else f"{self.prefix}{self.base}"
@@ -79,7 +80,7 @@ class BaseUnit:
         return new
 
     def mod(self):
-        return self.modifier ** self.exp
+        return (self.base_modifier * self.prefix_modifier) ** self.exp
 
 
 
@@ -143,6 +144,16 @@ class mol(BaseUnit):
         super().__init__(prefix = prefix, exp = exp)
 
 
+class gramMol(BaseUnit):
+    
+    base = "gmol"
+    dimension = "amount"
+    __name__ = "gmol"
+
+    def __init__(self, prefix = "", exp = 1):
+        super().__init__(prefix = prefix, exp = exp)
+
+
 class newton(BaseUnit):
     
     base = "N"
@@ -193,4 +204,17 @@ class hertz(BaseUnit):
         super().__init__(prefix = prefix, exp = exp)
 
 
-all_unit_types = [meter, kelvin, joule, pascal, gram, mol, newton, second, watt, coulomb, hertz]
+class custom(BaseUnit):
+
+    def __init__(self, base, dimension, name, base_modifier = 1, prefix = "", exp = 1):
+        self.base = base
+        self.dimension = dimension
+        self.__name__ = name
+        self.base_modifier = base_modifier
+        super().__init__(prefix = prefix, exp = exp)
+
+    def __call__(self, prefix = "", exp = 1):
+        return custom(self.base, self.dimension, self.__name__, self.base_modifier, prefix, exp)
+
+
+all_base_units = [meter, kelvin, joule, pascal, gram, mol, gramMol, newton, second, watt, coulomb, hertz]
