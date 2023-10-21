@@ -12,7 +12,8 @@ class BaseUnit:
         self.prefix_modifier = self.prefix_modifiers[self.prefixes.index(prefix)]
 
     def __str__(self):
-        return f"{self.prefix}{self.base}^{self.exp}" if self.exp != 1 else f"{self.prefix}{self.base}"
+        exp = int(self.exp) if int(self.exp) == self.exp else self.exp
+        return f"{self.prefix}{self.base}^{exp}" if self.exp != 1 else f"{self.prefix}{self.base}"
     
     def __repr__(self):
         string = f"{self.__name__}("
@@ -28,6 +29,23 @@ class BaseUnit:
     def __eq__(self, other):
         return self.prefix == other.prefix and self.base == other.base
     
+
+    # Comparison functions for sorting a list of BaseUnits
+    # ----------------------------------------------------
+    def __lt__(self, other):
+        return self.exp < other.exp
+    
+    def __le__(self, other):
+        return self.exp <= other.exp
+    
+    def __gt__(self, other):
+        return self.exp > other.exp
+    
+    def __ge__(self, other):
+        return self.exp >= other.exp
+    # ----------------------------------------------------
+    
+
     def __mul__(self, other):
         from .main import Units
         if isinstance(other, Units):

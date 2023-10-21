@@ -14,6 +14,14 @@ class Units:
         else:
             self.base_units = self.flatten(base_units)
 
+        # Take out any BaseUnits with an exponent of 0
+        i = 0
+        while i < len(self.base_units):
+            if self.base_units[i].exp == 0:
+                self.base_units.pop(i)
+            else:
+                i += 1
+
         self.dimension = " ".join([f"{u.dimension}^{u.exp}" for u in self.base_units])
 
     def __str__(self):
@@ -21,8 +29,9 @@ class Units:
             return "(unitless)"
         
         string = []
-        for u in self.base_units:
+        for u in sorted(self.base_units, reverse=True):
             string.append(str(u))
+        
         return " ".join(string)
     
     def __mul__(self, other):

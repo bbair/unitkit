@@ -60,7 +60,7 @@ def parse_exp(tokens: str):
     string = ""
     num_open = 0
     num_close = 0
-    while i < len(tokens) and (tokens[i] in special_chars or tokens[i].isdigit() or "-" in tokens[i]):
+    while i < len(tokens) and (tokens[i] in special_chars or is_number(tokens[i])):
         if tokens[i] in special_chars:
             if tokens[i] == "(":
                 num_open += 1
@@ -72,6 +72,12 @@ def parse_exp(tokens: str):
         string += tokens[i]
         i += 1
     return eval(string), len(string)
+
+
+def is_number(string: str):
+    if string.isdigit():
+        return True
+    return string.strip().lstrip("-").replace(".", "", 1).isdigit()
 
 
 def add_base_unit(name, base, dimension, base_modifier):
