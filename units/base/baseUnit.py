@@ -47,7 +47,7 @@ class BaseUnit:
     
 
     def __mul__(self, other):
-        from .main import Units
+        from ..main import Units
         if isinstance(other, Units):
             return other * self
         
@@ -90,7 +90,12 @@ class BaseUnit:
         self.exp *= exp
 
     def copy(self):
-        return eval(self.__repr__())
+        copy = BaseUnit(self.prefix, self.exp)
+        copy.base_modifier = self.base_modifier
+        copy.base = self.base
+        copy.dimension = self.dimension
+        copy.__name__ = self.__name__
+        return copy
 
     def invert(self):
         new = self.copy()
@@ -99,128 +104,7 @@ class BaseUnit:
 
     def mod(self):
         return (self.base_modifier * self.prefix_modifier) ** self.exp
-
-
-
-class meter(BaseUnit):
-
-    base = "m"
-    dimension = "length"
-    __name__ = "meter"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-        
-class kelvin(BaseUnit):
-
-    base = "K"
-    dimension = "temperature"
-    __name__ = "kelvin"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-
-class joule(BaseUnit):
-
-    base = "J"
-    dimension = "energy"
-    __name__ = "joule"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-
-class pascal(BaseUnit):
     
-    base = "Pa"
-    dimension = "pressure"
-    __name__ = "pascal"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-
-class gram(BaseUnit):
-    
-    base = "g"
-    dimension = "mass"
-    __name__ = "gram"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-
-class mol(BaseUnit):
-    
-    base = "mol"
-    dimension = "amount"
-    __name__ = "mol"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-
-class gramMol(BaseUnit):
-    
-    base = "gmol"
-    dimension = "amount"
-    __name__ = "gmol"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-
-class newton(BaseUnit):
-    
-    base = "N"
-    dimension = "force"
-    __name__ = "newton"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-
-class second(BaseUnit):
-    
-    base = "s"
-    dimension = "time"
-    __name__ = "second"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-
-class watt(BaseUnit):
-    
-    base = "W"
-    dimension = "power"
-    __name__ = "watt"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-
-class coulomb(BaseUnit):
-    
-    base = "C"
-    dimension = "charge"
-    __name__ = "coulomb"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-
-class hertz(BaseUnit):
-    
-    base = "Hz"
-    dimension = "frequency"
-    __name__ = "hertz"
-
-    def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
 
 class custom(BaseUnit):
 
@@ -233,6 +117,3 @@ class custom(BaseUnit):
 
     def __call__(self, prefix = "", exp = 1):
         return custom(self.base, self.dimension, self.__name__, self.base_modifier, prefix, exp)
-
-
-all_base_units = [meter, kelvin, joule, pascal, gram, mol, gramMol, newton, second, watt, coulomb, hertz]

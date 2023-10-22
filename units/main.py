@@ -1,4 +1,4 @@
-from .__baseUnits__ import BaseUnit
+from .base import BaseUnit
 from .parse import parse_units
 
 class Units:

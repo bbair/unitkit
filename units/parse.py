@@ -1,4 +1,4 @@
-from .__baseUnits__ import BaseUnit, all_base_units, custom
+from .base import BaseUnit, all_base_units, custom
 
 special_chars = ["/", "*", "(", ")", "^"]
 
