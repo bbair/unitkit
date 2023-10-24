@@ -77,6 +77,7 @@ class Units:
     def update_exp(self, exp):
         for u in self.base_units:
             u.update_exp(exp)
+        return self
 
     def invert(self):
         new = self.copy()
