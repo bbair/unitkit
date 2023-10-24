@@ -7,11 +7,11 @@ def parse_units(tokens, in_numerator = True, group = False):
         return str(tokens), [tokens]
     elif tokens is None or tokens == "":
         return "", []
-
-    tokens = tokens.replace(" ", "")
-    for special in special_chars:
-        tokens = tokens.replace(special, f" {special} ")
-    tokens = tokens.strip().split()
+    elif isinstance(tokens, str):
+        tokens = tokens.replace(" ", "")
+        for special in special_chars:
+            tokens = tokens.replace(special, f" {special} ")
+        tokens = tokens.strip().split()
 
     base_units = []
     i = 0
