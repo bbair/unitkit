@@ -1,12 +1,17 @@
-from .baseUnit import BaseUnit
+from .baseUnit import BaseUnit, Dimension
+
+class Charge(Dimension):
+
+    __name__ = "Charge"
+
+    def __init__(self):
+        self.units = [coulomb]
+        self.base = coulomb
 
 class coulomb(BaseUnit):
     
     base = "C"
-    dimension = "charge"
     __name__ = "coulomb"
 
     def __init__(self, prefix = "", exp = 1):
-        super().__init__(prefix = prefix, exp = exp)
-
-charge_units = [coulomb]
+        super().__init__(prefix=prefix, exp=exp, dimension=Charge())

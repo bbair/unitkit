@@ -3,12 +3,13 @@ class BaseUnit:
     prefixes = ["n", "u", "m", "c", "d", "k", "M", ""]
     prefix_modifiers = [1e9, 1e6, 1e3, 1e2, 1e1, 1e-3, 1e-6, 1]
     base = ""
-    dimension = ""
     base_modifier = 1
+    expanded = ""
 
-    def __init__(self, prefix = "", exp = 1.0):
+    def __init__(self, prefix = "", exp = 1.0, dimension = None):
         self.prefix = prefix
         self.exp = exp
+        self.dimension = dimension
         self.prefix_modifier = self.prefix_modifiers[self.prefixes.index(prefix)]
 
     def __str__(self):
@@ -28,6 +29,9 @@ class BaseUnit:
     
     def __eq__(self, other):
         return self.prefix == other.prefix and self.base == other.base
+    
+    def __bool__(self):
+        return True
     
 
     # Comparison functions for sorting a list of BaseUnits
@@ -95,6 +99,7 @@ class BaseUnit:
         copy.base = self.base
         copy.dimension = self.dimension
         copy.__name__ = self.__name__
+        copy.expanded = self.expanded
         return copy
 
     def invert(self):
@@ -102,18 +107,79 @@ class BaseUnit:
         new.update_exp(-1)
         return new
 
-    def mod(self):
-        return (self.base_modifier * self.prefix_modifier) ** self.exp
+    def _mod(self):
+        return self._pre_mod() * self._base_mod()
     
+    def _pre_mod(self):
+        return self.prefix_modifier ** self.exp
+    
+    def _base_mod(self):
+        return self.base_modifier ** self.exp
+    
+    def can_expand(self):
+        return self.expanded != ""
+    
+    def expand(self):
+        from ..main import Units
+        if self.can_expand():
+            expanded = Units(self.expanded).update_exp(self.exp)
+            return expanded
+        return Units(self.prefix + self.base)
+    
+    def full_expand(self):
+        if self.can_expand():
+            expanded, modifier = self.expand().expand_all()
+            return expanded, modifier
+        return self, 1
+    
+    def to_dimension_base(self):
+        dbase_unit = self.dimension.base(prefix="", exp=self.exp)
+        modifier = self._mod()
+        return dbase_unit, modifier
 
-class custom(BaseUnit):
+
+class Custom(BaseUnit):
 
     def __init__(self, base, dimension, name, base_modifier = 1, prefix = "", exp = 1):
+        super().__init__(prefix = prefix, exp = exp)
         self.base = base
-        self.dimension = dimension
+
+        if isinstance(dimension, Dimension):
+            self.dimension = dimension
+        else:
+            self.dimension = _get_dimension(dimension)
+
         self.__name__ = name
         self.base_modifier = base_modifier
-        super().__init__(prefix = prefix, exp = exp)
 
     def __call__(self, prefix = "", exp = 1):
-        return custom(self.base, self.dimension, self.__name__, self.base_modifier, prefix, exp)
+        return Custom(self.base, self.dimension, self.__name__, self.base_modifier, prefix, exp)
+    
+
+class Dimension:
+
+    base: BaseUnit
+    __name__ = ""
+
+    def __init__(self):
+        self.units = []
+
+    def __str__(self):
+        return self.__name__
+    
+    def __eq__(self, other):
+        return self.__name__ == other.__name__
+    
+    def __hash__(self):
+        return hash(self.__name__)
+    
+
+def _get_dimension(name: str) -> Dimension:
+    from . import all_dimensions
+
+    for dim in all_dimensions:
+        if dim.__name__.lower() == name.lower():
+            return dim()
+    
+    print(f"Dimension '{name}' not found among available dimensions.")
+    return None

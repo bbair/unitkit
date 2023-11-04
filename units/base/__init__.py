@@ -1,29 +1,33 @@
-from .baseUnit import BaseUnit, custom
+from .baseUnit import BaseUnit, Custom, Dimension
 
-from .amount import amount_units
-from .charge import charge_units
-from .energy import energy_units
-from .force import force_units
-from .frequency import frequency_units
-from .length import length_units
-from .mass import mass_units
-from .power import power_units
-from .pressure import pressure_units
-from .temperature import temperature_units
-from .time import time_units
-from .volume import volume_units
+from .amount import Amount
+from .charge import Charge
+from .energy import Energy
+from .force import Force
+from .frequency import Frequency
+from .length import Length
+from .mass import Mass
+from .power import Power
+from .pressure import Pressure
+from .temperature import Temperature
+from .time import Time
+from .volume import Volume
 
-all_base_units = (
-    amount_units +
-    charge_units +
-    energy_units +
-    force_units +
-    frequency_units +
-    length_units +
-    mass_units +
-    power_units +
-    pressure_units +
-    temperature_units +
-    time_units +
-    volume_units
-)
+all_dimensions: list[Dimension] = [
+    Amount,
+    Charge,
+    Energy,
+    Force,
+    Frequency,
+    Length,
+    Mass,
+    Power,
+    Pressure,
+    Temperature,
+    Time,
+    Volume
+]
+
+all_base_units = []
+for dim in all_dimensions:
+    all_base_units.extend(dim().units)

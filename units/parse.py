@@ -1,4 +1,4 @@
-from .base import BaseUnit, all_base_units, custom
+from .base import BaseUnit, all_base_units, Custom
 
 special_chars = ["/", "*", "(", ")", "^"]
 
@@ -82,5 +82,5 @@ def is_number(string: str):
 
 def add_base_unit(name, base, dimension, base_modifier):
     global all_base_units
-    new_unit = custom(base, dimension, name, base_modifier)
+    new_unit = Custom(base, dimension, name, base_modifier)
     all_base_units = [new_unit] + all_base_units

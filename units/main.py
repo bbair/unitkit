@@ -1,5 +1,6 @@
 from .base import BaseUnit
 from .parse import parse_units
+from . import conversions
 
 class Units:
 
@@ -12,7 +13,8 @@ class Units:
         if parse:
             self.string, self.base_units = parse_units(string)
         else:
-            self.base_units = self.flatten(base_units)
+            flattened = _flatten_unit_list(base_units)
+            self.base_units = _combine_unit_list(flattened)
 
         # Take out any BaseUnits with an exponent of 0
         i = 0
@@ -65,14 +67,9 @@ class Units:
     def is_unitless(self):
         return len(self.base_units) == 0
 
-    def flatten(self, lst) -> list[BaseUnit]:
-        return_lst: list[BaseUnit] = []
-        for u in lst:
-            if isinstance(u, Units) and u.base_units:
-                return_lst.extend(u.base_units)
-            else:
-                return_lst.append(u)
-        return return_lst
+    def _flatten(self) -> list[BaseUnit]:
+        flattened = _flatten_unit_list(self.base_units)
+        return Units(base_units=flattened, parse=False)
     
     def update_exp(self, exp):
         new = self.copy()
@@ -102,14 +99,14 @@ class Units:
 
             i = 0
             while i < len(remaining):
-                if can_convert(u * remaining[i]):
+                if conversions.can_convert(u * remaining[i]):
                     other = remaining.pop(i)
-                    modifier *= other.mod() / u.mod()
+                    modifier *= other._mod() / u._mod()
                     canceled = True
                     break
-                elif can_convert(u / remaining[i]):
+                elif conversions.can_convert(u / remaining[i]):
                     other = remaining.pop(i)
-                    modifier /= other.mod() * u.mod()
+                    modifier /= other._mod() * u._mod()
                     u.exp += other.exp
                 else:
                     i += 1
@@ -117,7 +114,27 @@ class Units:
             if not canceled:
                 keep.append(u)
         return Units(base_units=keep, parse=False), modifier
+    
+    def expand_all(self):
+        new_base_units = []
+        modifier = 1
+        for u in self.base_units:
 
+            u, to_dbase_modifier = u.to_dimension_base()
+            modifier *= to_dbase_modifier
+
+            if u.can_expand():
+                expanded, expand_modifier = u.full_expand()
+                modifier *= expand_modifier
+                new_base_units.extend(expanded.base_units)
+            else:
+                new_base_units.append(u)
+
+        return Units(base_units=new_base_units, parse=False), modifier
+    
+    def _combine(self):
+        combined = _combine_unit_list(self.base_units)
+        return Units(base_units=combined, parse=False)
 
 class Value:
 
@@ -232,25 +249,26 @@ class Value:
         converter_units: Units = new_units / self.units
 
         if converter_units.is_unitless():
-            return Value(self.num, self.units, self.sigfigs)
+            return Value(self.num, new_units, self.sigfigs)
 
         needs_mw = False
-        if not can_convert(converter_units):
+        if not conversions.can_convert(converter_units):
             mw_units = Units("g/mol")
-            if can_convert(converter_units * mw_units):
+            if conversions.can_convert(converter_units * mw_units):
                 if mw is None:
                     raise Exception(f"Needs the molecular weight to convert but no molecular weight was provided.")
                 needs_mw = True
                 mw = 1 / mw
-            elif can_convert(converter_units / mw_units):
+            elif conversions.can_convert(converter_units / mw_units):
                 if mw is None:
                     raise Exception(f"Needs the molecular weight to convert but no molecular weight was provided.")
                 needs_mw = True
             else:
                 raise Exception(f"The units ({self.units}) can't be converted to the new units ({new_units})")
 
-        conversion_factor = build_conversion_factor(converter_units, mw, needs_mw)
+        conversion_factor = conversions.build_conversion_factor(converter_units, mw, needs_mw)
         new = self * conversion_factor
+        new.units = new_units
         new.sigfigs = self.sigfigs
         return new
     
@@ -270,23 +288,38 @@ def use_sigfigs():
         print("The sigfig module was not found. Sigfig rounding will not be used.")
 
 
-def can_convert(units):
-    dimensions = {}
-    for u in units.base_units:
-        if not u.dimension in dimensions:
-            dimensions[u.dimension] = 0
-        dimensions[u.dimension] += u.exp
-    return all(v == 0 for v in dimensions.values())
+def _combine_unit_list(units: list[BaseUnit]):
+    remaining = units.copy()
+    combined = []
+
+    while len(remaining) > 0:
+        current = remaining.pop()
+        i = 0
+
+        while i < len(remaining):
+            if current == remaining[i]:
+                other = remaining.pop(i)
+                current *= other
+
+                if current is None:
+                    break
+            else:
+                i += 1
+
+        if current:
+            combined.append(current)
+
+    return combined
 
 
-def build_conversion_factor(converter_units, mw: Value, needs_mw):
-    factor = Value(1, None)
-    if needs_mw:
-        converter_units /= mw.units
-        factor *= mw
-    for u in converter_units.base_units:
-        factor *= Value(u.mod(), u)
-    return factor
+def _flatten_unit_list(units) -> list[BaseUnit]:
+    return_lst: list[BaseUnit] = []
+    for u in units:
+        if isinstance(u, Units) and u.base_units:
+            return_lst.extend(u.base_units)
+        else:
+            return_lst.append(u)
+    return return_lst
 
 
 def count_sigfigs(number):
