@@ -159,6 +159,12 @@ class Value:
             return f"{self.roundsf().num} {self.units}"
         return f"{self.num} {self.units}"
     
+    def __float__(self):
+        return self.num
+
+    def __int__(self):
+        return int(self.num)
+    
     def __eq__(self, other):
         return self.equals(other)
     
@@ -221,7 +227,7 @@ class Value:
             exp = exp.num
         return Value(self.num ** exp, self.units.update_exp(exp), self.sigfigs)
     
-    def __round__(self, n):
+    def __round__(self, n = None):
         new = self.copy()
         new.num = round(new.num, n)
         return new
@@ -245,6 +251,13 @@ class Value:
     def convert_units(self, new_units, mw = None):
         if not isinstance(new_units, Units):
             new_units = Units(new_units)
+
+        # Check if its just converting between two temperature units
+        if conversions.is_temperature_conversion(self.units, new_units):
+            print("Temperature conversion")
+            converter = conversions.get_temperature_converter(self.units, new_units)
+            new = Value(converter(self.num), new_units, self.sigfigs)
+            return new
 
         converter_units: Units = new_units / self.units
 

@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abates20.units"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
   { name="Adam Bates", email="adambates923@gmail.com" },
 ]
-description = "A Python package for dealing with units"
+description = "A Python package for dealing with values that have units"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [

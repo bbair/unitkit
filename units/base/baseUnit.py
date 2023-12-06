@@ -4,6 +4,7 @@ class BaseUnit:
     prefix_modifiers = [1e9, 1e6, 1e3, 1e2, 1e1, 1e-3, 1e-6, 1]
     base = ""
     base_modifier = 1
+    shift_modifier = 0
     expanded = ""
 
     def __init__(self, prefix = "", exp = 1.0, dimension = None):

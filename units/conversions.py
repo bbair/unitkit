@@ -39,3 +39,24 @@ def build_conversion_factor(converter_units, mw, needs_mw):
     for u in converter_units.base_units:
         factor *= Value(u._mod(), u)
     return factor
+
+
+def is_temperature_conversion(old_units, new_units):
+    from .base import Temperature
+
+    # Each set of units has to just be made of a single temperature base unit
+    if len(old_units.base_units) == 1 and len(new_units.base_units) == 1:
+        return (old_units.base_units[0].dimension == Temperature and
+                new_units.base_units[0].dimension == Temperature)
+    return False
+
+
+def get_temperature_converter(old_units, new_units):
+    def converter(T):
+        unit1 = old_units.base_units[0]
+        T = (T + unit1.shift_modifier) / unit1.base_modifier
+
+        unit2 = new_units.base_units[0]
+        T = T * unit2.base_modifier - unit2.shift_modifier
+        return T
+    return converter
