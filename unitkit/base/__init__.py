@@ -19,13 +19,13 @@ all_dimensions: list[Dimension] = [
     Energy,
     Force,
     Frequency,
-    Length,
     Mass,
     Power,
     Pressure,
     Temperature,
     Time,
-    Volume
+    Volume,
+    Length
 ]
 
 all_base_units = []

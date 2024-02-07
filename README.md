@@ -1,10 +1,10 @@
-# pythonUnits
+# unitkit
 A python package for handling units and unit conversions.
 
 # Usage
 
 ```Python
->>> from units import Value
+>>> from unitkit import Value
 
 # Create a "Value" object (a number with units)
 >>> my_value = Value(5, "kJ/kg")
