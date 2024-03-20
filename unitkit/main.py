@@ -148,7 +148,7 @@ def ensure_value_input(f):
     """A decorator to make sure inputs to comparison
     functions in the Value class are a Value object.
     """
-    def wrapper(self: Value, input, *args, **kwargs):
+    def wrapper(self, input, *args, **kwargs):
         if not isinstance(input, Value):
             # Only assume units if self is not unitless
             if conversions.can_convert(self.units):
