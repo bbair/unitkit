@@ -1,6 +1,7 @@
 from .base import BaseUnit
 from .parse import parse_units
 from . import conversions
+import warnings
 
 class Units:
 
@@ -23,8 +24,6 @@ class Units:
                 self.base_units.pop(i)
             else:
                 i += 1
-
-        self.dimension = " ".join([f"{u.dimension}^{u.exp}" for u in self.base_units])
 
     def __str__(self):
         if self.is_unitless():
@@ -71,6 +70,18 @@ class Units:
         flattened = _flatten_unit_list(self.base_units)
         return Units(base_units=flattened, parse=False)
     
+    @property
+    def dimension(self):
+        dim_strs = []
+        for u in self.base_units:
+            if u.exp == 1:
+                dim_strs.append(str(u.dimension))
+            elif u.exp % 1 == 0:
+                dim_strs.append(f"{u.dimension}^{int(u.exp)}")
+            else:
+                dim_strs.append(f"{u.dimension}^{u.exp}")
+        return " ".join(dim_strs)
+    
     def update_exp(self, exp):
         new = self.copy()
         for u in new.base_units:
@@ -92,7 +103,6 @@ class Units:
     def simplify(self):
         remaining = self.base_units.copy()
         keep = []
-        modifier = 1
         while len(remaining) > 0:
             canceled = False
             u = remaining.pop(0)
@@ -101,19 +111,17 @@ class Units:
             while i < len(remaining):
                 if conversions.can_convert(u * remaining[i]):
                     other = remaining.pop(i)
-                    modifier *= other._mod() / u._mod()
                     canceled = True
                     break
                 elif conversions.can_convert(u / remaining[i]):
                     other = remaining.pop(i)
-                    modifier /= other._mod() * u._mod()
                     u.exp += other.exp
                 else:
                     i += 1
 
             if not canceled:
                 keep.append(u)
-        return Units(base_units=keep, parse=False), modifier
+        return Units(base_units=keep, parse=False)
     
     def expand_all(self):
         new_base_units = []
@@ -136,12 +144,27 @@ class Units:
         combined = _combine_unit_list(self.base_units)
         return Units(base_units=combined, parse=False)
 
+def ensure_value_input(f):
+    """A decorator to make sure inputs to comparison
+    functions in the Value class are a Value object.
+    """
+    def wrapper(self: Value, input, *args, **kwargs):
+        if not isinstance(input, Value):
+            # Only assume units if self is not unitless
+            if conversions.can_convert(self.units):
+                input = Value(float(input), None)
+            else:
+                warnings.warn(f"The input was not a Value object. Assuming units are {self.units}")
+                input = Value(float(input), self.units)
+        return f(self, input, *args, **kwargs)
+    return wrapper
+
 class Value:
 
     __use_sigfigs__ = False
 
-    def __init__(self, number, units, sigfigs = None):
-        self.num = float(number) if number else number
+    def __init__(self, number, units = None, sigfigs = None):
+        self.value = float(number) if number else number
 
         if not isinstance(units, Units):
             units = Units(units)
@@ -152,60 +175,59 @@ class Value:
         self.sigfigs = sigfigs
 
     def __repr__(self):
-        return f"Value({self.num}, '{self.units}')"
+        return f"Value({self.value}, '{self.units}')"
     
     def __str__(self):
         if self.__use_sigfigs__:
-            return f"{self.roundsf().num} {self.units}"
-        return f"{self.num} {self.units}"
+            return f"{self.roundsf().value} {self.units}"
+        return f"{self.value} {self.units}"
     
     def __float__(self):
-        return self.num
+        return self.value
 
     def __int__(self):
-        return int(self.num)
+        return int(self.value)
     
     def __eq__(self, other):
         return self.equals(other)
     
+    @ensure_value_input
     def __lt__(self, other):
-        if not isinstance(other, Value):
-            raise TypeError("Can only compare against another value object")
+        assert isinstance(other, Value)
         other = other.convert_units(self.units)
-        return self.num < other.num
+        return self.value < other.value
     
+    @ensure_value_input
     def __gt__(self, other):
-        if not isinstance(other, Value):
-            raise TypeError("Can only compare against another value object")
+        assert isinstance(other, Value)
         other = other.convert_units(self.units)
-        return self.num > other.num
+        return self.value > other.value
     
+    @ensure_value_input
     def __add__(self, other):
-        if isinstance(other, int) or isinstance(other, float):
-            return Value(self.num + other, self.units, self.sigfigs)
+        assert isinstance(other, Value)
         other = other.convert_units(self.units)
-        return Value(self.num + other.num, self.units, min([self.sigfigs, other.sigfigs]))
+        return Value(self.value + other.value, self.units, min([self.sigfigs, other.sigfigs]))
     
+    @ensure_value_input
     def __radd__(self, other):
-        if not (isinstance(other, int) or isinstance(other, float)):
-            raise TypeError()
         return self.__add__(other)
     
+    @ensure_value_input
     def __sub__(self, other):
-        if isinstance(other, int) or isinstance(other, float):
-            return Value(self.num - other, self.units, self.sigfigs)
+        assert isinstance(other, Value)
         other = other.convert_units(self.units)
-        return Value(self.num - other.num, self.units, min([self.sigfigs, other.sigfigs]))
+        return Value(self.value - other.value, self.units, min([self.sigfigs, other.sigfigs]))
     
+    @ensure_value_input
     def __rsub__(self, other):
-        if not (isinstance(other, int) or isinstance(other, float)):
-            raise TypeError()
-        return Value(other - self.num, self.units, self.sigfigs)
+        assert isinstance(other, Value)
+        return Value(other - self.value, self.units, self.sigfigs)
     
     def __mul__(self, other):
         if isinstance(other, int) or isinstance(other, float):
-            return Value(self.num * other, self.units, self.sigfigs)
-        return Value(self.num * other.num, self.units * other.units, min([self.sigfigs, other.sigfigs]))
+            return Value(self.value * other, self.units, self.sigfigs)
+        return Value(self.value * other.value, self.units * other.units, min([self.sigfigs, other.sigfigs]))
     
     def __rmul__(self, other):
         if not (isinstance(other, int) or isinstance(other, float)):
@@ -214,38 +236,38 @@ class Value:
     
     def __truediv__(self, other):
         if isinstance(other, int) or isinstance(other, float):
-            return Value(self.num / other, self.units, self.sigfigs)
-        return Value(self.num / other.num, self.units / other.units, min([self.sigfigs, other.sigfigs]))
+            return Value(self.value / other, self.units, self.sigfigs)
+        return Value(self.value / other.value, self.units / other.units, min([self.sigfigs, other.sigfigs]))
     
     def __rtruediv__(self, other):
         if not (isinstance(other, int) or isinstance(other, float)):
             raise TypeError()
-        return Value(other / self.num, self.units.invert(), self.sigfigs)
+        return Value(other / self.value, self.units.invert(), self.sigfigs)
     
     def __pow__(self, exp):
         if isinstance(exp, Value):
-            exp = exp.num
-        return Value(self.num ** exp, self.units.update_exp(exp), self.sigfigs)
+            exp = exp.value
+        return Value(self.value ** exp, self.units.update_exp(exp), self.sigfigs)
     
     def __round__(self, n = None):
         new = self.copy()
-        new.num = round(new.num, n)
+        new.value = round(new.value, n)
         return new
     
     def roundsf(self):
-        if self.num:
+        if self.value:
             import sigfig
-            return Value(sigfig.round(self.num, sigfigs = self.sigfigs), self.units, self.sigfigs)
+            return Value(sigfig.round(self.value, sigfigs = self.sigfigs), self.units, self.sigfigs)
         return self
     
+    @ensure_value_input
     def equals(self, other, epsilon = 0.005):
-        if not isinstance(other, Value):
-            raise TypeError("Can only compare against another value object")
+        assert isinstance(other, Value)
         other = other.convert_units(self.units)
-        return abs((self.num - other.num) / self.num) < epsilon
+        return abs((self.value - other.value) / self.value) < epsilon
     
     def copy(self):
-        new = Value(self.num, self.units.copy(), self.sigfigs)
+        new = Value(self.value, self.units.copy(), self.sigfigs)
         return new
     
     def convert_units(self, new_units, mw = None):
@@ -256,13 +278,13 @@ class Value:
         if conversions.is_temperature_conversion(self.units, new_units):
             print("Temperature conversion")
             converter = conversions.get_temperature_converter(self.units, new_units)
-            new = Value(converter(self.num), new_units, self.sigfigs)
+            new = Value(converter(self.value), new_units, self.sigfigs)
             return new
 
         converter_units: Units = new_units / self.units
 
         if converter_units.is_unitless():
-            return Value(self.num, new_units, self.sigfigs)
+            return Value(self.value, new_units, self.sigfigs)
 
         needs_mw = False
         if not conversions.can_convert(converter_units):
@@ -289,8 +311,8 @@ class Value:
         return self.convert_units(new_units, mw)
     
     def simplify_units(self):
-        new_units, modifier = self.units.simplify()
-        return Value(self.num * modifier, new_units, self.sigfigs)
+        new_units = self.units.simplify()
+        return self.to(new_units)
  
     
 def use_sigfigs():
