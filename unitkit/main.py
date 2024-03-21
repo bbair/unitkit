@@ -276,7 +276,6 @@ class Value:
 
         # Check if its just converting between two temperature units
         if conversions.is_temperature_conversion(self.units, new_units):
-            print("Temperature conversion")
             converter = conversions.get_temperature_converter(self.units, new_units)
             new = Value(converter(self.value), new_units, self.sigfigs)
             return new
