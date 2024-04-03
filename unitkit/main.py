@@ -1,7 +1,6 @@
 from .base import BaseUnit
 from .parse import parse_units
-from . import conversions
-import warnings
+from . import conversions, _utils
 
 class Units:
 
@@ -144,20 +143,6 @@ class Units:
         combined = _combine_unit_list(self.base_units)
         return Units(base_units=combined, parse=False)
 
-def ensure_value_input(f):
-    """A decorator to make sure inputs to comparison
-    functions in the Value class are a Value object.
-    """
-    def wrapper(self, input, *args, **kwargs):
-        if not isinstance(input, Value):
-            # Only assume units if self is not unitless
-            if conversions.can_convert(self.units):
-                input = Value(float(input), None)
-            else:
-                warnings.warn(f"The input was not a Value object. Assuming units are {self.units}")
-                input = Value(float(input), self.units)
-        return f(self, input, *args, **kwargs)
-    return wrapper
 
 class Value:
 
@@ -171,7 +156,7 @@ class Value:
         self.units = units
 
         if sigfigs is None:
-            sigfigs = count_sigfigs(number)
+            sigfigs = _utils.count_sigfigs(number)
         self.sigfigs = sigfigs
 
     def __repr__(self):
@@ -191,35 +176,38 @@ class Value:
     def __eq__(self, other):
         return self.equals(other)
     
-    @ensure_value_input
+    def __neg__(self):
+        return Value(-self.value, self.units.copy(), self.sigfigs)
+    
+    @_utils.ensure_value_input
     def __lt__(self, other):
         assert isinstance(other, Value)
         other = other.convert_units(self.units)
         return self.value < other.value
     
-    @ensure_value_input
+    @_utils.ensure_value_input
     def __gt__(self, other):
         assert isinstance(other, Value)
         other = other.convert_units(self.units)
         return self.value > other.value
     
-    @ensure_value_input
+    @_utils.ensure_value_input
     def __add__(self, other):
         assert isinstance(other, Value)
         other = other.convert_units(self.units)
         return Value(self.value + other.value, self.units, min([self.sigfigs, other.sigfigs]))
     
-    @ensure_value_input
+    @_utils.ensure_value_input
     def __radd__(self, other):
         return self.__add__(other)
     
-    @ensure_value_input
+    @_utils.ensure_value_input
     def __sub__(self, other):
         assert isinstance(other, Value)
         other = other.convert_units(self.units)
         return Value(self.value - other.value, self.units, min([self.sigfigs, other.sigfigs]))
     
-    @ensure_value_input
+    @_utils.ensure_value_input
     def __rsub__(self, other):
         assert isinstance(other, Value)
         return Value(other - self.value, self.units, self.sigfigs)
@@ -259,8 +247,18 @@ class Value:
             import sigfig
             return Value(sigfig.round(self.value, sigfigs = self.sigfigs), self.units, self.sigfigs)
         return self
+
+    @_utils.force_unitless
+    def log(self):
+        import math
+        return Value(math.log(self.value), None, self.sigfigs)
     
-    @ensure_value_input
+    @_utils.force_unitless
+    def exp(self):
+        import math
+        return Value(math.exp(self.value), None, self.sigfigs)
+    
+    @_utils.ensure_value_input
     def equals(self, other, epsilon = 0.005):
         assert isinstance(other, Value)
         other = other.convert_units(self.units)
@@ -271,40 +269,7 @@ class Value:
         return new
     
     def convert_units(self, new_units, mw = None):
-        if not isinstance(new_units, Units):
-            new_units = Units(new_units)
-
-        # Check if its just converting between two temperature units
-        if conversions.is_temperature_conversion(self.units, new_units):
-            converter = conversions.get_temperature_converter(self.units, new_units)
-            new = Value(converter(self.value), new_units, self.sigfigs)
-            return new
-
-        converter_units: Units = new_units / self.units
-
-        if converter_units.is_unitless():
-            return Value(self.value, new_units, self.sigfigs)
-
-        needs_mw = False
-        if not conversions.can_convert(converter_units):
-            mw_units = Units("g/mol")
-            if conversions.can_convert(converter_units * mw_units):
-                if mw is None:
-                    raise Exception(f"Needs the molecular weight to convert but no molecular weight was provided.")
-                needs_mw = True
-                mw = 1 / mw
-            elif conversions.can_convert(converter_units / mw_units):
-                if mw is None:
-                    raise Exception(f"Needs the molecular weight to convert but no molecular weight was provided.")
-                needs_mw = True
-            else:
-                raise Exception(f"The units ({self.units}) can't be converted to the new units ({new_units})")
-
-        conversion_factor = conversions.build_conversion_factor(converter_units, mw, needs_mw)
-        new = self * conversion_factor
-        new.units = new_units
-        new.sigfigs = self.sigfigs
-        return new
+        return conversions.convert(self, new_units, mw)
     
     def to(self, new_units, mw = None):
         return self.convert_units(new_units, mw)
@@ -354,11 +319,3 @@ def _flatten_unit_list(units) -> list[BaseUnit]:
         else:
             return_lst.append(u)
     return return_lst
-
-
-def count_sigfigs(number):
-    number = str(number).lstrip("-").split("e")[0]
-    integer, _, decimal = number.partition(".")
-    if decimal:
-        return len((integer + decimal).lstrip("0"))
-    return len(integer.strip("0"))

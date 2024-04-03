@@ -14,5 +14,12 @@ class TestMain(unittest.TestCase):
         gal2 = m3.to("gal")
         self.assertEqual(gal, gal2)
 
+    def test_simplify(self):
+        value = Value(1, "in/m")
+        self.assertEqual(value.simplify_units(), value.to(None))
+
+        value = Value(1, "m3/gal*Pa")
+        self.assertEqual(value.simplify_units(), value.to("Pa"))
+
 if __name__ == "__main___":
     unittest.main()

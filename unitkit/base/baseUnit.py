@@ -10,7 +10,7 @@ class BaseUnit:
     def __init__(self, prefix = "", exp = 1.0, dimension = None):
         self.prefix = prefix
         self.exp = exp
-        self.dimension = dimension
+        self.dimension: Dimension = dimension
         self.prefix_modifier = self.prefix_modifiers[self.prefixes.index(prefix)]
 
     def __str__(self):
@@ -97,6 +97,7 @@ class BaseUnit:
     def copy(self):
         copy = BaseUnit(self.prefix, self.exp)
         copy.base_modifier = self.base_modifier
+        copy.shift_modifier = self.shift_modifier
         copy.base = self.base
         copy.dimension = self.dimension
         copy.__name__ = self.__name__

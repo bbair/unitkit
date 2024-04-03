@@ -1,7 +1,7 @@
 # unitkit
 A python package for handling units and unit conversions.
 
-# Usage
+## Usage
 
 ```Python
 >>> from unitkit import Value
@@ -29,3 +29,6 @@ Value(8.0, 'kJ kg^-1')
 >>> force
 Value(50.0, 'kg m s^-2')
 ```
+
+## Unit Tests
+

@@ -8,12 +8,17 @@ def parse_units(tokens, in_numerator = True, group = False):
     elif tokens is None or tokens == "":
         return "", []
     elif isinstance(tokens, str):
-        tokens = tokens.replace(" ", "")
+        # tokens = tokens.replace(" ", "")
+        
+        # In Python, "**" is used for exponentiation so change "**" to "^"
+        tokens = tokens.replace("**", "^")
+
         for special in special_chars:
             tokens = tokens.replace(special, f" {special} ")
         tokens = tokens.strip().split()
 
     base_units = []
+    last_added = []
     i = 0
     flip = lambda x: x
     while i < len(tokens):
@@ -27,6 +32,7 @@ def parse_units(tokens, in_numerator = True, group = False):
             elif token == "(":
                 match, num = parse_units(tokens[i + 1:], flip(in_numerator), group = True)
                 base_units.extend(match)
+                last_added = match
                 i += num
             elif token == ")":
                 if not group:
@@ -34,7 +40,8 @@ def parse_units(tokens, in_numerator = True, group = False):
                 return base_units, i + 1
             elif token == "^":
                 exp, num = parse_exp(tokens[i + 1:])
-                base_units[-1].update_exp(exp)
+                for base_unit in last_added:
+                    base_unit.update_exp(exp)
                 i += num               
 
         elif token != "1":
@@ -49,6 +56,7 @@ def parse_units(tokens, in_numerator = True, group = False):
             if not flip(in_numerator):
                 match.exp *= -1
             base_units.append(match)
+            last_added = [match]
 
         i += 1
 
@@ -71,7 +79,7 @@ def parse_exp(tokens: str):
                 
         string += tokens[i]
         i += 1
-    return eval(string), len(string)
+    return eval(string), i
 
 
 def is_number(string: str):
