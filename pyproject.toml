@@ -18,5 +18,5 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-"Homepage" = "https://github.com/abates20/pythonUnits"
-"Bug Tracker" = "https://github.com/abates20/pythonUnits/issues"
+"Homepage" = "https://github.com/abates20/unitkit"
+"Bug Tracker" = "https://github.com/abates20/unitkit/issues"

@@ -5,7 +5,7 @@ This Python package provides functionality for handling calculations involving v
 The package can be installed directly from GitHub using pip:
 
 ```bash
-pip install git+https://github.com/abates20/pythonUnits.git
+pip install git+https://github.com/abates20/unitkit.git
 ```
 
 ## Usage
