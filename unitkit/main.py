@@ -1,6 +1,6 @@
 from .base import BaseUnit
 from .parse import parse_units
-from . import conversions, _utils
+from . import _sigfigs, conversions, _utils
 
 class Units:
 
@@ -156,7 +156,7 @@ class Value:
         self.units = units
 
         if sigfigs is None:
-            sigfigs = _utils.count_sigfigs(number)
+            sigfigs = _sigfigs.count(number)
         self.sigfigs = sigfigs
 
     def __repr__(self):
@@ -164,8 +164,13 @@ class Value:
     
     def __str__(self):
         if self.__use_sigfigs__:
-            return f"{self.roundsf().value} {self.units}"
+            return f"{self.value:.{self.sigfigs - 1}e} {self.units}"
         return f"{self.value} {self.units}"
+    
+    def __format__(self, code: str):
+        if code.endswith("f") or code.endswith("e"):
+            return f"{self.value:{code}} {self.units}"
+        raise Exception(f"Unsupported format code: '{code}'")
     
     def __float__(self):
         return self.value
@@ -242,10 +247,12 @@ class Value:
         new.value = round(new.value, n)
         return new
     
-    def roundsf(self):
+    def roundsf(self, n = None):
         if self.value:
             import sigfig
-            return Value(sigfig.round(self.value, sigfigs = self.sigfigs), self.units, self.sigfigs)
+            if n is None:
+                n = self.sigfigs
+            return Value(sigfig.round(self.value, sigfigs=n), self.units, n)
         return self
 
     @_utils.force_unitless
