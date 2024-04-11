@@ -8,6 +8,11 @@ class TestConversions(unittest.TestCase):
         L = Units("L")
         self.assertTrue(conversions.can_convert(m3 / L))
 
+    def test_viscosity(self):
+        cP = Units("cP")
+        pas = Units("Pa*s")
+        self.assertTrue(conversions.can_convert(cP / pas))
+
     def test_complex_conversions(self):
         units1 = Units("L*atm/mol/K")
         units2 = Units("J/mol/K")

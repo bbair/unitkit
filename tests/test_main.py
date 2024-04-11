@@ -14,6 +14,11 @@ class TestMain(unittest.TestCase):
         gal2 = m3.to("gal")
         self.assertEqual(gal, gal2)
 
+    def test_viscosity(self):
+        P = Value(10, "P")
+        Pa_s = P.to("Pa*s")
+        self.assertEqual(Pa_s, Value(1, "Pa*s"))
+
     def test_simplify(self):
         value = Value(1, "in/m")
         self.assertEqual(value.simplify_units(), value.to(None))

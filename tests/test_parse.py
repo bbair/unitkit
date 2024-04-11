@@ -8,6 +8,12 @@ class TestParse(unittest.TestCase):
         self.assertIsInstance(minutes.base_units[0], base.time.minute)
         self.assertEqual(minutes.base_units[0].exp, 1)
 
+    def test_viscosity(self):
+        cP = Units("cP")
+        self.assertEqual(len(cP.base_units), 1)
+        self.assertIsInstance(cP.base_units[0], base.viscosity.poise)
+        self.assertEqual(cP.base_units[0].exp, 1)
+
     def test_python_exponent(self):
         lcp = Units("J mol**-1 K**-1")
         self.assertEqual(len(lcp.base_units), 3)

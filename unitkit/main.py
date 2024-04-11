@@ -3,6 +3,46 @@ from .parse import parse_units
 from . import _sigfigs, conversions, _utils
 
 class Units:
+    """
+    Represents a collection of base units and provides methods for manipulation and conversion.
+
+    Parameters
+    ----------
+    string : str, optional
+        A string representation of units (default is "").
+    base_units : list[BaseUnit], optional
+        A list of BaseUnit objects (default is []).
+    parse : bool, optional
+        Whether to parse the string representation of units (default is True).
+
+    Attributes
+    ----------
+    string : str
+        The string representation of units.
+    base_units : list[BaseUnit]
+        A list of BaseUnit objects representing the units.
+
+    Methods
+    -------
+    is_unitless()
+        Checks if the units are dimensionless.
+    _flatten()
+        Flattens nested units into a single list of base units.
+    dimension()
+        Calculates the dimension of the units.
+    update_exp(exp)
+        Updates the exponents of the base units.
+    invert()
+        Inverts the units.
+    copy()
+        Creates a copy of the Units object.
+    simplify()
+        Simplifies the units by combining similar units.
+    expand_all()
+        Expands all base units to their fundamental dimensions.
+    _combine()
+        Combines similar base units into a single unit.
+    """
 
     __name__ = "unit"
 
@@ -145,10 +185,62 @@ class Units:
 
 
 class Value:
+    """
+    Represents a value with associated units and provides methods for arithmetic operations and unit conversions.
+
+    Parameters
+    ----------
+    number : float
+        The numerical value.
+    units : Units, optional
+        The associated units (default is None, i.e., unitless).
+    sigfigs : int, optional
+        The number of significant figures (default is None).
+
+    Attributes
+    ----------
+    value : float
+        The numerical value.
+    units : Units
+        The associated units.
+    sigfigs : int
+        The number of significant figures.
+
+    Methods
+    -------
+    roundsf(n)
+        Rounds the value to the specified number of significant figures.
+    log()
+        Computes the natural logarithm of the value.
+    exp()
+        Computes the exponential of the value.
+    equals(other)
+        Checks if the value is approximately equal to another value.
+    copy()
+        Creates a copy of the Value object.
+    convert_units(new_units, mw)
+        Converts the value to new units.
+    to(new_units, mw)
+        Converts the value to new units (alternative method).
+    simplify_units()
+        Simplifies the units associated with the value.
+    """
 
     __use_sigfigs__ = False
 
     def __init__(self, number, units = None, sigfigs = None):
+        """
+        Initializes a Value object with a numerical value, associated units, and optional significant figures.
+        
+        Parameters
+        ----------
+        number : float
+            The numerical value.
+        units : str | Units, optional
+            The associated units (default is None).
+        sigfigs : int, optional
+            The number of significant figures (default is None).
+        """
         self.value = float(number) if number else number
 
         if not isinstance(units, Units):
@@ -248,6 +340,19 @@ class Value:
         return new
     
     def roundsf(self, n = None):
+        """
+        Rounds the value to the specified number of significant figures.
+
+        Parameters
+        ----------
+        n : int, optional
+            The number of significant figures to round to
+
+        Returns
+        -------
+        Value
+            The value rounded based on significant figures
+        """
         if self.value:
             import sigfig
             if n is None:
@@ -257,36 +362,117 @@ class Value:
 
     @_utils.force_unitless
     def log(self):
+        """
+        Computes the natural logarithm of the value.
+
+        Returns
+        -------
+        Value
+            The resulting value. This value will always be 
+            unitless.
+        """
         import math
         return Value(math.log(self.value), None, self.sigfigs)
     
     @_utils.force_unitless
     def exp(self):
+        """
+        Computes the exponential of the value.
+
+        Returns
+        -------
+        Value
+            The exponentiated value. This value will always be
+            unitless.
+        """
         import math
         return Value(math.exp(self.value), None, self.sigfigs)
     
     @_utils.ensure_value_input
     def equals(self, other, epsilon = 0.005):
+        """
+        Check if this value is equal to another (within the specified 
+        relative tolerance).
+
+        Returns
+        -------
+        bool
+            True or False indicating if this value equals the other.
+        """
         assert isinstance(other, Value)
         other = other.convert_units(self.units)
         return abs((self.value - other.value) / self.value) < epsilon
     
     def copy(self):
+        """
+        Create a deep copy of this value object.
+        """
         new = Value(self.value, self.units.copy(), self.sigfigs)
         return new
     
     def convert_units(self, new_units, mw = None):
+        """
+        Convert the units of this value to new units.
+
+        Parameters
+        ----------
+        new_units : str | Units
+            The new units to convert to
+        mw : Value, optional
+            The molecular weight for conversions that require
+            a molecular weight (e.g., converting from kg to mol)
+        
+        Returns
+        -------
+        Value
+            A new value object with the original value converted 
+            to the new units.
+        """
         return conversions.convert(self, new_units, mw)
     
     def to(self, new_units, mw = None):
+        """
+        Convert the units of this value to new units.
+
+        This method is simply another name for the `convert_units`
+        method.
+
+        Parameters
+        ----------
+        new_units : str | Units
+            The new units to convert to
+        mw : Value, optional
+            The molecular weight for conversions that require
+            a molecular weight (e.g., converting from kg to mol)
+        
+        Returns
+        -------
+        Value
+            A new value object with the original value converted 
+            to the new units.
+        """
         return self.convert_units(new_units, mw)
     
     def simplify_units(self):
+        """
+        Simplify the units by combining specific units with the
+        same dimensions.
+
+        THIS METHOD IS UNTESTED.
+
+        Returns
+        -------
+        Value
+            A new value with simplified units.
+        """
         new_units = self.units.simplify()
         return self.to(new_units)
  
     
 def use_sigfigs():
+    """
+    Enables the usage of significant figures rounding in Value objects.
+    """
     try:
         import sigfig
         Value.__use_sigfigs__ = True
@@ -295,6 +481,19 @@ def use_sigfigs():
 
 
 def _combine_unit_list(units: list[BaseUnit]):
+    """
+    Combines similar BaseUnit objects in a list.
+
+    Parameters
+    ----------
+    units : list[BaseUnit]
+        A list of BaseUnit objects.
+
+    Returns
+    -------
+    list[BaseUnit]
+        A list of combined BaseUnit objects.
+    """
     remaining = units.copy()
     combined = []
 
@@ -319,6 +518,19 @@ def _combine_unit_list(units: list[BaseUnit]):
 
 
 def _flatten_unit_list(units) -> list[BaseUnit]:
+    """
+    Flattens nested units into a single list of BaseUnit objects.
+
+    Parameters
+    ----------
+    units : object
+        The input units, which could be nested.
+
+    Returns
+    -------
+    list[BaseUnit]
+        A flattened list of BaseUnit objects.
+    """
     return_lst: list[BaseUnit] = []
     for u in units:
         if isinstance(u, Units) and u.base_units:
