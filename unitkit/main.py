@@ -259,10 +259,8 @@ class Value:
             return f"{self.value:.{self.sigfigs - 1}e} {self.units}"
         return f"{self.value} {self.units}"
     
-    def __format__(self, code: str):
-        if code.endswith("f") or code.endswith("e"):
-            return f"{self.value:{code}} {self.units}"
-        raise Exception(f"Unsupported format code: '{code}'")
+    def __format__(self, format_spec: str):
+        return f"{format(self.value, format_spec)} {self.units}"
     
     def __float__(self):
         return self.value
