@@ -15,6 +15,7 @@ from .time import Time
 from .viscosity import Viscosity
 from .voltage import Voltage
 from .volume import Volume
+from .conductance import Conductance
 
 all_dimensions: list[Dimension] = [
     Amount,
@@ -32,6 +33,7 @@ all_dimensions: list[Dimension] = [
     Voltage,
     Volume,
     Length, # Length goes after time so "min" doesn't get interpreted as a milli-inch
+    Conductance,
 ]
 
 all_base_units = []
