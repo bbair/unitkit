@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unitkit"
-version = "2024.12.3.dev"
+version = "2024.12.03"
 authors = [
   { name="Adam Bates", email="adambates923@gmail.com" },
   { name="Brianna Nielson", email="bairbrianna@gmail.com" },
@@ -20,4 +20,4 @@ dependencies = []
 
 [project.urls]
 "Homepage" = "https://github.com/bbair/unitkit"
-"Bug Tracker" = "https://github.com/abates20/unitkit/issues"
+"Bug Tracker" = "https://github.com/bbair/unitkit/issues"
