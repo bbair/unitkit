@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unitkit"
-version = "2024.12.3"
+version = "2024.12.3.dev"
 authors = [
   { name="Adam Bates", email="adambates923@gmail.com" },
   { name="Brianna Nielson", email="bairbrianna@gmail.com" },
