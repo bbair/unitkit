@@ -4,9 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unitkit"
-version = "2024.7.19"
+version = "2024.12.3"
 authors = [
   { name="Adam Bates", email="adambates923@gmail.com" },
+  { name="Brianna Nielson", email="bairbrianna@gmail.com" },
 ]
 description = "A Python package for dealing with values that have units"
 readme = "README.md"
@@ -18,5 +19,5 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-"Homepage" = "https://github.com/abates20/unitkit"
+"Homepage" = "https://github.com/bbair/unitkit"
 "Bug Tracker" = "https://github.com/abates20/unitkit/issues"
